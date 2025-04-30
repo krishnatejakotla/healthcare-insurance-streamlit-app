@@ -39,5 +39,16 @@ input_df = pd.DataFrame([input_dict])
 
 # Predict
 if st.button("Predict Insurance Cost"):
+    # Fix: Match input columns with model training
+required_cols = ['age', 'sex', 'bmi', 'children', 'smoker',
+                 'region_northwest', 'region_southeast', 'region_southwest',
+                 'bmi_category_Obese']
+
+for col in required_cols:
+    if col not in input_df.columns:
+        input_df[col] = 0
+
+input_df = input_df[required_cols]
+
     prediction = model.predict(input_df)[0]
     st.success(f"Estimated Insurance Charges: ${prediction:,.2f}")
