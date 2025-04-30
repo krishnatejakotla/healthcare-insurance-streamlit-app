@@ -34,22 +34,40 @@ if bmi >= 30:
 else:
     input_dict['bmi_category_Obese'] = 0
 
-# Convert input to DataFrame
-input_df = pd.DataFrame([input_dict])
-
 # Predict and show result
 if st.button("Predict Insurance Cost"):
-    # Ensure required columns are present and in correct order
+    # Convert to DataFrame
+    input_df = pd.DataFrame([input_dict])
+
+    # Enforce correct data types for each column
+    input_df = input_df.astype({
+        'age': 'int',
+        'sex': 'int',
+        'bmi': 'float',
+        'children': 'int',
+        'smoker': 'int',
+        'region_northwest': 'int',
+        'region_southeast': 'int',
+        'region_southwest': 'int',
+        'bmi_category_Obese': 'int'
+    })
+
+    # Ensure all required columns are present
     required_cols = ['age', 'sex', 'bmi', 'children', 'smoker',
                      'region_northwest', 'region_southeast', 'region_southwest',
                      'bmi_category_Obese']
-    
+
     for col in required_cols:
         if col not in input_df.columns:
             input_df[col] = 0
 
+    # Reorder columns to match training order
     input_df = input_df[required_cols]
 
-    # Predict using model
+    # (Optional) Debug info
+    # st.write("Input shape:", input_df.shape)
+    # st.write(input_df.head())
+
+    # Predict
     prediction = model.predict(input_df)[0]
     st.success(f"Estimated Insurance Charges: ${prediction:,.2f}")
