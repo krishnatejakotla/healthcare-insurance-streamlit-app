@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import joblib
 
-# Load model
+# Load trained model
 model = joblib.load('model.pkl')
 
 st.title("💰 Healthcare Insurance Cost Predictor")
@@ -16,7 +16,7 @@ children = st.slider("Number of Children", 0, 5, 0)
 smoker = st.selectbox("Do you smoke?", ["No", "Yes"])
 region = st.selectbox("Region", ['southeast', 'southwest', 'northeast', 'northwest'])
 
-# Preprocess inputs
+# Preprocessing user input
 input_dict = {
     'age': age,
     'sex': 0 if sex == 'Male' else 1,
@@ -28,27 +28,28 @@ input_dict = {
     'region_southwest': 1 if region == 'southwest' else 0
 }
 
-# Optional: BMI category
+# Optional BMI Category
 if bmi >= 30:
     input_dict['bmi_category_Obese'] = 1
 else:
     input_dict['bmi_category_Obese'] = 0
 
-# Convert to DataFrame
+# Convert input to DataFrame
 input_df = pd.DataFrame([input_dict])
 
-# Predict
+# Predict and show result
 if st.button("Predict Insurance Cost"):
-    # Fix: Match input columns with model training
-required_cols = ['age', 'sex', 'bmi', 'children', 'smoker',
-                 'region_northwest', 'region_southeast', 'region_southwest',
-                 'bmi_category_Obese']
+    # Ensure required columns are present and in correct order
+    required_cols = ['age', 'sex', 'bmi', 'children', 'smoker',
+                     'region_northwest', 'region_southeast', 'region_southwest',
+                     'bmi_category_Obese']
+    
+    for col in required_cols:
+        if col not in input_df.columns:
+            input_df[col] = 0
 
-for col in required_cols:
-    if col not in input_df.columns:
-        input_df[col] = 0
+    input_df = input_df[required_cols]
 
-input_df = input_df[required_cols]
-
+    # Predict using model
     prediction = model.predict(input_df)[0]
     st.success(f"Estimated Insurance Charges: ${prediction:,.2f}")
