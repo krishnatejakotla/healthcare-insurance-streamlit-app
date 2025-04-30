@@ -3,8 +3,9 @@ import pandas as pd
 import numpy as np
 import joblib
 
-# Load trained model
+# Load model and its expected feature names
 model = joblib.load('model.pkl')
+expected_cols = model.feature_names_in_  # This will avoid mismatch errors
 
 st.title("💰 Healthcare Insurance Cost Predictor")
 
@@ -23,45 +24,31 @@ input_dict = {
     'bmi': bmi,
     'children': children,
     'smoker': 1 if smoker == 'Yes' else 0,
+    'region_northeast': 0,
     'region_northwest': 0,
     'region_southeast': 0,
     'region_southwest': 0,
-    'region_northeast': 0  # ← previously missing!
+    'bmi_category_Obese': 1 if bmi >= 30 else 0
 }
 
-# Set selected region to 1
+# Set correct region column
 input_dict[f"region_{region}"] = 1
-
-# BMI category (custom feature)
-input_dict['bmi_category_Obese'] = 1 if bmi >= 30 else 0
 
 # Convert to DataFrame
 input_df = pd.DataFrame([input_dict])
 
-# Reorder and typecast columns
-required_cols = ['age', 'sex', 'bmi', 'children', 'smoker',
-                 'region_northeast', 'region_northwest', 'region_southeast', 'region_southwest',
-                 'bmi_category_Obese']
-
-for col in required_cols:
+# Add any missing columns (in case)
+for col in expected_cols:
     if col not in input_df.columns:
         input_df[col] = 0
 
-input_df = input_df[required_cols]
-input_df = input_df.astype({
-    'age': 'int',
-    'sex': 'int',
-    'bmi': 'float',
-    'children': 'int',
-    'smoker': 'int',
-    'region_northeast': 'int',
-    'region_northwest': 'int',
-    'region_southeast': 'int',
-    'region_southwest': 'int',
-    'bmi_category_Obese': 'int'
-})
+# Reorder columns to exactly match training
+input_df = input_df[expected_cols]
 
-# Predict and display result
+# Convert types just to be safe
+input_df = input_df.astype(float)
+
+# Predict
 if st.button("Predict Insurance Cost"):
     prediction = model.predict(input_df)[0]
     st.success(f"Estimated Insurance Charges: ${prediction:,.2f}")
